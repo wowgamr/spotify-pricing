@@ -60,7 +60,7 @@
 
 <style lang="scss" scoped>
   .stat-card {
-    background: rgba(25, 27, 30, 0.85) !important;
+    background: rgba(25, 27, 30, 0.85);
     border: 1px solid rgba(255, 255, 255, 0.15);
 
     &--red {
