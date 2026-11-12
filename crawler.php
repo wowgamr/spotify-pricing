@@ -18,7 +18,7 @@ function getHtml($url) {
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
     curl_setopt($ch, CURLOPT_FRESH_CONNECT, TRUE);
-    curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.84 Safari/537.36');
+    curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36');
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
@@ -30,27 +30,43 @@ function getPrice($url, $rel) {
     if ($response !== false) {
         $dom = new SelectorDOM($response);
 
-        if (($rel == 'ID' || $rel == 'VN' || $rel == 'BD' || $rel == 'PH' || $rel == 'TH' || $rel == 'MY' || $rel == 'KE' || $rel == 'EG' || $rel == 'CO' || $rel == 'PK'
-        || $rel == 'LK' || $rel == 'IN' || $rel == 'ZA' || $rel == 'SA' || $rel == 'TR')
-        && isset($dom->select('div[data-current-plan-text]')[1]['children'][2]['text'])){ // Some countries have daily plans, so we take second block
-            $price = $dom->select('div[data-current-plan-text]')[1]['children'][2]['text'];
+        if (($rel == 'ID' || $rel == 'VN' || $rel == 'PH' || $rel == 'TH' || $rel == 'MY' || $rel == 'KE' || $rel == 'ZA' || $rel == 'SA')
+        && isset($dom->select('div[data-current-plan-text]')[1]['children'][1]['children'][3]['text'])){ // Some countries have daily plans, so we take second block
+            $price = $dom->select('div[data-current-plan-text]')[1]['children'][1]['children'][3]['text'];
         }
-        elseif (isset($dom->select('div[data-current-plan-text]')[0]['children'][2]['text'])) { // Standard pages
-            $price = $dom->select('div[data-current-plan-text]')[0]['children'][2]['text'];
+        elseif (($rel == 'CA' || $rel == 'AD' || $rel == 'TR')
+        && isset($dom->select('div[data-current-plan-text]')[0]['children'][0]['children'][3]['text'])){ // Fix free month label
+            $price = $dom->select('div[data-current-plan-text]')[0]['children'][0]['children'][3]['text'];
+        }
+        elseif (($rel == 'US' && isset($dom->select('div[data-current-plan-text]')[0]['children'][1]['children'][3]['text']))){ // Fix for US promo page
+            $price = $dom->select('div[data-current-plan-text]')[0]['children'][1]['children'][3]['text'];
+        }
+        elseif (isset($dom->select('div[data-current-plan-text]')[0]['children'][0]['children'][2]['text'])) { // Standard pages
+            $price = $dom->select('div[data-current-plan-text]')[0]['children'][0]['children'][2]['text'];
         }
         elseif (isset($dom->select('h2')[0]['text'])){ // Temporary fix for new markets with one tariff plan
             $price = $dom->select('h2')[0]['text'];
         };
 
+        // Fix for Cabo Verde
+        if ($rel == 'CV') {
+            $price = str_replace('$29', '.29', $price);
+        }
+
+        // Remove converted price for Bulgaria
+        if ($rel == 'BG') {
+            $price = preg_replace('/\([^)]*\)/', '', $price);
+        }
+
         $price = str_replace(',', '.', $price);
         $price = preg_replace('/[^,.0-9]/', '', $price);
         $price = ltrim($price, '.');
         $price = rtrim($price, '.');
-        if ($rel == 'CL' || $rel == 'CO') {
-            $price = preg_replace('/00/', '', $price, 1);
-            $price = str_replace('.', '', $price);
-        };
-        if ($rel == 'TZ' || $rel == 'UG' || $rel == 'KR' || $rel == 'ID' || $rel == 'VN' || $rel == 'IQ') {
+        // if ($rel == 'CL') {
+        //     $price = preg_replace('/00/', '', $price, 1);
+        //     $price = str_replace('.', '', $price);
+        // };
+        if ($rel == 'TZ' || $rel == 'UG' || $rel == 'KR' || $rel == 'ID' || $rel == 'VN' || $rel == 'IQ' || $rel == 'AR' || $rel == 'CO' || $rel == 'NG' || $rel == 'CL' || $rel == 'JP') {
             $price = str_replace('.', '', $price);
         };
         return $price;
@@ -76,26 +92,29 @@ function unique_multidim_array($array, $key) {
     return $temp_array;
 }
 
-/* Fix Russia block
-$response = getHtml('https://www.spotify.com/us/select-your-country-region/'); */
-$response = getHtml('https://spotify.wowgamr.ru/data/countries.html');
+$response = getHtml('https://www.spotify.com/us/select-your-country-region/');
 
 if ($response !== false)
 {
     $dom = new SelectorDOM($response);
     $links = $dom->select('.encore-light-theme li a'); // get list of countries
+    $countries = [];
 
     for ($i = 0; $i < count($links); $i++) {
-        $restoredPrice = false;
+        $restoredPrice = 0;
         $rel = strtoupper(substr($links[$i]['attributes']['href'], 1, 2)); // substr 'ca-fr' to 'CA'
 
-        if ($rel == 'RU'){
+        if (strpos($links[$i]['attributes']['href'], '-ar')){
             continue;
         };
 
-        /* Fix Russia block
-        $price = getPrice('https://www.spotify.com'.$links[$i]['attributes']['href'].'premium/', $rel); */
-        $price = NULL;
+        if ($i > 0){
+            if ($rel == end($countries)['rel']){
+                continue;
+            };
+        };
+
+        $price = getPrice('https://www.spotify.com'.$links[$i]['attributes']['href'].'premium/', $rel);
 
         // todo: duo prices
         // todo: family plan prices
@@ -105,15 +124,15 @@ if ($response !== false)
                 return $summary['rel'] == $rel;
             }));
             $price = $summary_tmp['price'];
-            $restoredPrice = true;
+            $restoredPrice = 1;
         };
 
         $rate = round($exchange['rates'][$countrycodes[$rel]['currency']], 2);
         $convertedPrice = $price/$rate;
         $convertedPrice = round($convertedPrice, 2);
-        
-        $countries[$i] = ['title' => $countrycodes[$rel]['title'], 'rel' => $rel, 'countryCode' => $countrycodes[$rel]['countryCode'], 'currency' => $countrycodes[$rel]['currency'],
-        'region' => $countrycodes[$rel]['region'], 'restoredPrice' => $restoredPrice, 'price' => $price, 'f_price' => '', 'convertedPrice' => $convertedPrice, 'f_convertedPrice' => ''];
+
+        array_push($countries, ['title' => $countrycodes[$rel]['title'], 'rel' => $rel, 'countryCode' => $countrycodes[$rel]['countryCode'], 'currency' => $countrycodes[$rel]['currency'],
+        'region' => $countrycodes[$rel]['region'], 'restoredPrice' => $restoredPrice, 'price' => $price, 'f_price' => '', 'convertedPrice' => $convertedPrice, 'f_convertedPrice' => '']);
     };
 
     $countries = unique_multidim_array($countries, 'rel');
@@ -127,7 +146,7 @@ if ($response !== false)
     $data = '['.$data.']';
 
     $check_data = json_decode($data);
-    if (json_last_error() === JSON_ERROR_NONE) {
+    if (json_last_error() === JSON_ERROR_NONE && $data !== '[]') {
         $file = fopen(__DIR__.'/data/summary.json', 'w');
         fwrite($file, $data);
         fclose($file);

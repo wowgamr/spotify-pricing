@@ -1,14 +1,18 @@
 # Spotify Premium Index
 
+[![Vue.js](https://img.shields.io/badge/Vue.js-4FC08D?logo=vuedotjs&logoColor=fff)](#)
+[![Vuetify](https://img.shields.io/badge/Vuetify-1867C0?logo=vuetify&logoColor=fff)](#)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=fff)](#)
+[![PHP](https://img.shields.io/badge/php-%23777BB4.svg?&logo=php&logoColor=white)](#)
+
 ![Spotify](https://i.snipboard.io/CPYwFy.jpg)
 
 Pricing data is loaded using crawler.php and Cron every Monday.
 Check out the end result here: <https://spotify.wowgamr.ru>
 
 ### Dependencies
-- [D3.js](https://d3js.org)
-- [datamaps.js](https://datamaps.github.io)
-- [tinycolor.js](https://bgrins.github.io/TinyColor)
+- [vue-echarts](https://github.com/ecomfe/vue-echarts)
+- [flag-icons](https://github.com/lipis/flag-icons)
 - [PHP Selector](https://github.com/tj/php-selector)
 
 

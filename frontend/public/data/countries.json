@@ -195,7 +195,7 @@
         "title": "Romania",
         "region": "Europe",
         "countryCode": "ROU",
-        "currency": "EUR"
+        "currency": "RON"
     },
     "TK": {
         "title": "Tokelau",
@@ -363,7 +363,7 @@
         "title": "Hungary",
         "region": "Europe",
         "countryCode": "HUN",
-        "currency": "EUR"
+        "currency": "HUF"
     },
     "HK": {
         "title": "Hong Kong",
@@ -945,7 +945,7 @@
         "title": "Czech Republic",
         "region": "Europe",
         "countryCode": "CZE",
-        "currency": "EUR"
+        "currency": "CZK"
     },
     "CY": {
         "title": "Cyprus",
@@ -1491,7 +1491,7 @@
         "title": "Qatar",
         "region": "Asia",
         "countryCode": "QAT",
-        "currency": "USD"
+        "currency": "QAR"
     },
     "MZ": {
         "title": "Mozambique",
